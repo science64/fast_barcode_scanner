@@ -22,6 +22,8 @@ import io.flutter.view.TextureRegistry
 import java.util.ArrayList
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.math.max
+import kotlin.math.min
 
 data class CameraConfig(val formats: IntArray, val mode: DetectionMode, val resolution: Resolution, val framerate: Framerate, val position: CameraPosition)
 
@@ -76,7 +78,16 @@ class BarcodeReader(private val flutterTextureEntry: TextureRegistry.SurfaceText
 
         if (allPermissionsGranted()) {
             initCamera()
-            result.success(hashMapOf("textureId" to flutterTextureEntry.id(), "surfaceOrientation" to 0, "surfaceHeight" to 1280, "surfaceWidth" to 720))
+            val zoomState = getZoomStateMap()
+            result.success(hashMapOf(
+                "textureId" to flutterTextureEntry.id(),
+                "surfaceOrientation" to 0,
+                "surfaceHeight" to 1280,
+                "surfaceWidth" to 720,
+                "minZoom" to zoomState["minZoom"],
+                "maxZoom" to zoomState["maxZoom"],
+                "zoom" to zoomState["zoom"]
+            ))
         } else {
             pendingResult = result
             ActivityCompat.requestPermissions(
@@ -103,6 +114,31 @@ class BarcodeReader(private val flutterTextureEntry: TextureRegistry.SurfaceText
         if (!isInitialized) return
         camera.cameraControl.enableTorch(camera.cameraInfo.torchState.value != TorchState.ON).addListener(Runnable {
             result.success(camera.cameraInfo.torchState.value == TorchState.ON)
+        }, ContextCompat.getMainExecutor(activity))
+    }
+
+    fun getZoomState(result: Result) {
+        result.success(getZoomStateMap())
+    }
+
+    fun setZoom(args: Any?, result: Result) {
+        if (!isInitialized) {
+            result.success(1.0)
+            return
+        }
+
+        val requestedZoom = (args as? Number)?.toFloat() ?: 1.0f
+        val zoomState = camera.cameraInfo.zoomState.value
+
+        if (zoomState == null) {
+            result.success(1.0)
+            return
+        }
+
+        val clampedZoom = max(zoomState.minZoomRatio, min(requestedZoom, zoomState.maxZoomRatio))
+        camera.cameraControl.setZoomRatio(clampedZoom).addListener(Runnable {
+            val appliedZoom = camera.cameraInfo.zoomState.value?.zoomRatio ?: clampedZoom
+            result.success(appliedZoom.toDouble())
         }, ContextCompat.getMainExecutor(activity))
     }
 
@@ -208,6 +244,23 @@ class BarcodeReader(private val flutterTextureEntry: TextureRegistry.SurfaceText
 
         // Make sure detections are allowed
         pauseDetection = false
+    }
+
+    private fun getZoomStateMap(): HashMap<String, Double> {
+        if (!isInitialized) {
+            return hashMapOf(
+                "minZoom" to 1.0,
+                "maxZoom" to 1.0,
+                "zoom" to 1.0
+            )
+        }
+
+        val zoomState = camera.cameraInfo.zoomState.value
+        return hashMapOf(
+            "minZoom" to (zoomState?.minZoomRatio?.toDouble() ?: 1.0),
+            "maxZoom" to (zoomState?.maxZoomRatio?.toDouble() ?: 1.0),
+            "zoom" to (zoomState?.zoomRatio?.toDouble() ?: 1.0)
+        )
     }
 
     companion object {

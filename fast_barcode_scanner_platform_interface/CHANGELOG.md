@@ -1,3 +1,9 @@
+## 1.1.0
+
+* Added zoom support methods (`setZoom`, `getZoomState`) to platform interface.
+* Added zoom data (`minZoom`, `maxZoom`, `zoom`) to `PreviewConfiguration`.
+* Updated Dart/Flutter SDK constraints and lint configuration.
+
 ## 1.0.4
 
 * Smaller code cleanups

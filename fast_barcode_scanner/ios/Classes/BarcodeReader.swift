@@ -208,6 +208,35 @@ class BarcodeReader: NSObject {
 		return captureDevice.isTorchActive
 	}
 
+    func getZoomState() -> [String: Double] {
+        guard captureDevice != nil else {
+            return ["minZoom": 1.0, "maxZoom": 1.0, "zoom": 1.0]
+        }
+
+        return [
+            "minZoom": captureDevice.minAvailableVideoZoomFactor,
+            "maxZoom": captureDevice.maxAvailableVideoZoomFactor,
+            "zoom": captureDevice.videoZoomFactor
+        ]
+    }
+
+    func setZoom(_ zoom: Double) throws -> Double {
+        guard captureDevice != nil else { return 1.0 }
+
+        let minZoom = captureDevice.minAvailableVideoZoomFactor
+        let maxZoom = captureDevice.maxAvailableVideoZoomFactor
+        let clampedZoom = max(minZoom, min(zoom, maxZoom))
+
+        do {
+            try captureDevice.lockForConfiguration()
+            captureDevice.videoZoomFactor = clampedZoom
+            captureDevice.unlockForConfiguration()
+            return captureDevice.videoZoomFactor
+        } catch {
+            throw ReaderError.configurationLockError(error)
+        }
+    }
+
 	func pauseIfRequired(force: Bool = false) {
 		if force {
 			stop(pause: true)

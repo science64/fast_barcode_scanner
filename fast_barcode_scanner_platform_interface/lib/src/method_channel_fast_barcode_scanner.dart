@@ -69,6 +69,16 @@ class MethodChannelFastBarcodeScanner extends FastBarcodeScannerPlatform {
       .then<bool>((success) => success);
 
   @override
+  Future<double> setZoom(double zoom) => _channel
+      .invokeMethod('setZoom', zoom)
+      .then<double>((value) => (value as num).toDouble());
+
+  @override
+  Future<Map<dynamic, dynamic>> getZoomState() => _channel
+      .invokeMapMethod<dynamic, dynamic>('getZoomState')
+      .then((value) => value ?? const {});
+
+  @override
   void setOnDetectHandler(void Function(Barcode) handler) =>
       _onDetectHandler = handler;
 }

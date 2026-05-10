@@ -11,7 +11,7 @@ A fast barcode scanner using **MLKit** (and **CameraX**) on Android and **AVFoun
 ## Installation
 Add the following line to your **pubspec.yaml**:
 ```yaml
-fast_barcode_scanner: ^1.1.0
+fast_barcode_scanner: ^1.2.0
 ```
 ### iOS
 Add the `NSCameraUsageDescription` key to your `ios/Runner/Info.plist`, like so:
@@ -74,6 +74,9 @@ method          |Description
 `pauseDetector` | Actively pauses the scanner                      
 `resumeDetector`| Resumes the scanner from the paused state       
 `toggleTorch`   | toggles the torch on and off                    
+`setZoom`       | Sets the zoom factor (clamped to device range)
+`zoomIn`        | Increases zoom by a configurable step
+`zoomOut`       | Decreases zoom by a configurable step
 `dispose`       | Stops and resets the camera on platform level   
 
 You do not have to call `initialize` yourself, if you use the `BarcodeCamera` widget.
@@ -88,6 +91,9 @@ Attribute | Description
 `previewConfig` | A `PreviewConfiguration` that is currently used
 `eventNotifier` | A event notifier to react to init or detecting codes
 `torchState`    | The current state of the torch (on/off)
+`zoom`          | Current zoom factor
+`minZoom`       | Minimum supported zoom factor
+`maxZoom`       | Maximum supported zoom factor
 `hasError`      | Indicates whether `error` is null or not
 `error`         | Access the error produced last
 

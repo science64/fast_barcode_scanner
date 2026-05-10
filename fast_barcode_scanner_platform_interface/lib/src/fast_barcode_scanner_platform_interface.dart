@@ -68,6 +68,16 @@ abstract class FastBarcodeScannerPlatform extends PlatformInterface {
     throw UnimplementedError('changeCamera() has not been implemented');
   }
 
+  /// Sets the camera zoom factor and returns the applied value.
+  Future<double> setZoom(double zoom) {
+    throw UnimplementedError('setZoom() has not been implemented');
+  }
+
+  /// Returns the current zoom state as a map with keys: minZoom, maxZoom, zoom.
+  Future<Map<dynamic, dynamic>> getZoomState() {
+    throw UnimplementedError('getZoomState() has not been implemented');
+  }
+
   /// Set the method to be called when a barcode is detected
   void setOnDetectHandler(void Function(Barcode) handler) {
     throw UnimplementedError('setOnReadHandler() has not been implemented');

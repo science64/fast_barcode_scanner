@@ -36,9 +36,21 @@ class PreviewConfiguration {
   /// Can be consumed by a [Texture] widget.
   final int textureId;
 
+  /// The minimum supported camera zoom factor.
+  final double minZoom;
+
+  /// The maximum supported camera zoom factor.
+  final double maxZoom;
+
+  /// The current camera zoom factor.
+  final double zoom;
+
   PreviewConfiguration(Map<dynamic, dynamic> response)
       : textureId = response["textureId"],
         sensorOrientation = response["surfaceOrientation"],
         height = response["surfaceHeight"],
-        width = response["surfaceWidth"];
+        width = response["surfaceWidth"],
+        minZoom = (response["minZoom"] as num?)?.toDouble() ?? 1.0,
+        maxZoom = (response["maxZoom"] as num?)?.toDouble() ?? 1.0,
+        zoom = (response["zoom"] as num?)?.toDouble() ?? 1.0;
 }
