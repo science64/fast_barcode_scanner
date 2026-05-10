@@ -38,6 +38,10 @@ class CameraState {
   PreviewConfiguration? _previewConfig;
   bool _torchState = false;
   bool _togglingTorch = false;
+  bool _settingZoom = false;
+  double _zoom = 1.0;
+  double _minZoom = 1.0;
+  double _maxZoom = 1.0;
   Object? _error;
 
   Object? get error => _error;
@@ -46,6 +50,10 @@ class CameraState {
   final eventNotifier = ValueNotifier(CameraEvent.uninitialized);
 
   bool get torchState => _torchState;
+  bool get settingZoom => _settingZoom;
+  double get zoom => _zoom;
+  double get minZoom => _minZoom;
+  double get maxZoom => _maxZoom;
   bool get isInitialized => _previewConfig != null;
   bool get hasError => error != null;
 }
@@ -85,6 +93,10 @@ class CameraController {
       if (state.isInitialized) await _platform.dispose();
       state._previewConfig = await _platform.init(
           types, resolution, framerate, detectionMode, position);
+      state._minZoom = state._previewConfig?.minZoom ?? 1.0;
+      state._maxZoom = state._previewConfig?.maxZoom ?? 1.0;
+      state._zoom = state._previewConfig?.zoom ?? 1.0;
+      await refreshZoomState();
 
       /// Notify the overlays when a barcode is detected and then call [onDetect].
       _platform.setOnDetectHandler((code) {
@@ -109,6 +121,9 @@ class CameraController {
     try {
       await _platform.dispose();
       state._previewConfig = null;
+      state._minZoom = 1.0;
+      state._maxZoom = 1.0;
+      state._zoom = 1.0;
       state.eventNotifier.value = CameraEvent.uninitialized;
     } catch (error, stack) {
       state._error = error;
@@ -178,4 +193,39 @@ class CameraController {
       debugPrintStack(stackTrace: stack);
     }
   }
+
+  Future<void> refreshZoomState() async {
+    try {
+      final zoomState = await _platform.getZoomState();
+      state._minZoom = (zoomState['minZoom'] as num?)?.toDouble() ?? 1.0;
+      state._maxZoom = (zoomState['maxZoom'] as num?)?.toDouble() ?? 1.0;
+      state._zoom = (zoomState['zoom'] as num?)?.toDouble() ?? 1.0;
+    } catch (error, stack) {
+      state._error = error;
+      state.eventNotifier.value = CameraEvent.error;
+      debugPrint(error.toString());
+      debugPrintStack(stackTrace: stack);
+    }
+  }
+
+  Future<void> setZoom(double zoom) async {
+    if (state._settingZoom) return;
+    state._settingZoom = true;
+
+    try {
+      final clampedZoom = zoom.clamp(state.minZoom, state.maxZoom).toDouble();
+      state._zoom = await _platform.setZoom(clampedZoom);
+    } catch (error, stack) {
+      state._error = error;
+      state.eventNotifier.value = CameraEvent.error;
+      debugPrint(error.toString());
+      debugPrintStack(stackTrace: stack);
+    }
+
+    state._settingZoom = false;
+  }
+
+  Future<void> zoomIn({double step = 0.2}) => setZoom(state.zoom + step);
+
+  Future<void> zoomOut({double step = 0.2}) => setZoom(state.zoom - step);
 }

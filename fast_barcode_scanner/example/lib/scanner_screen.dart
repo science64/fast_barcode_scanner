@@ -16,6 +16,21 @@ class ScannerScreen extends StatefulWidget {
 class _ScannerScreenState extends State<ScannerScreen> {
   final _torchIconState = ValueNotifier(false);
 
+  Future<void> _zoomIn() async {
+    await CameraController.instance.zoomIn();
+    setState(() {});
+  }
+
+  Future<void> _zoomOut() async {
+    await CameraController.instance.zoomOut();
+    setState(() {});
+  }
+
+  Future<void> _setZoom(double zoom) async {
+    await CameraController.instance.setZoom(zoom);
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,6 +85,50 @@ class _ScannerScreenState extends State<ScannerScreen> {
                   onPressed: () => CameraController.instance.resumeDetector(),
                 ),
                 const SizedBox(height: 20),
+                ValueListenableBuilder<CameraEvent>(
+                  valueListenable: CameraController.instance.state.eventNotifier,
+                  builder: (context, _, __) {
+                    final cameraState = CameraController.instance.state;
+                    final minZoom = cameraState.minZoom;
+                    final maxZoom = cameraState.maxZoom <= minZoom
+                        ? minZoom + 0.01
+                        : cameraState.maxZoom;
+                    final zoom =
+                        cameraState.zoom.clamp(minZoom, maxZoom).toDouble();
+
+                    return Column(
+                      children: [
+                        Text(
+                          'Zoom ${zoom.toStringAsFixed(2)}x',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              onPressed: _zoomOut,
+                              icon: const Icon(Icons.remove_circle_outline),
+                            ),
+                            SizedBox(
+                              width: 220,
+                              child: Slider(
+                                value: zoom,
+                                min: minZoom,
+                                max: maxZoom,
+                                onChanged: _setZoom,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _zoomIn,
+                              icon: const Icon(Icons.add_circle_outline),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
                 const DetectionsCounter()
               ],
             ),

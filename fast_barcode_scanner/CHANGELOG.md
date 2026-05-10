@@ -1,3 +1,9 @@
+## 1.2.0
+
+- Added camera zoom support (`setZoom`, `zoomIn`, `zoomOut`) with native Android and iOS implementations.
+- Added zoom state to `CameraState` and `PreviewConfiguration`.
+- Updated Dart/Flutter SDK constraints and lint configuration to current standards.
+
 ## 1.1.4
 
 - Fixes `pauseDetector` on iOS

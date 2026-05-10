@@ -55,6 +55,8 @@ public class FastBarcodeScannerPlugin: NSObject, FlutterPlugin {
             case "pause": pause(result: result)
             case "resume": try resume(result: result)
             case "toggleTorch": toggleTorch(result: result)
+            case "setZoom": try setZoom(call: call, result: result)
+            case "getZoomState": getZoomState(result: result)
             case "heartBeat": result(nil)
             default: result(FlutterMethodNotImplemented)
             }
@@ -87,12 +89,16 @@ public class FastBarcodeScannerPlugin: NSObject, FlutterPlugin {
 			}
 
 			try reader!.start(fromPause: false)
+            let zoomState = reader!.getZoomState()
 
 			result([
 				"surfaceWidth": reader!.previewSize.height,
 				"surfaceHeight": reader!.previewSize.width,
 				"surfaceOrientation": 0,
-				"textureId": reader!.textureId!
+				"textureId": reader!.textureId!,
+                "minZoom": zoomState["minZoom"],
+                "maxZoom": zoomState["maxZoom"],
+                "zoom": zoomState["zoom"]
 			])
 
 		} catch ReaderError.noInputDevice {
@@ -130,6 +136,21 @@ public class FastBarcodeScannerPlugin: NSObject, FlutterPlugin {
 	func toggleTorch(result: @escaping FlutterResult) {
 		result(reader?.toggleTorch())
 	}
+
+    func setZoom(call: FlutterMethodCall, result: @escaping FlutterResult) throws {
+        guard let zoom = call.arguments as? Double else {
+            result(FlutterError(code: "INVALID_ARGUMENT",
+                                message: "Expected a double zoom value",
+                                details: nil))
+            return
+        }
+
+        result(try reader?.setZoom(zoom) ?? 1.0)
+    }
+
+    func getZoomState(result: @escaping FlutterResult) {
+        result(reader?.getZoomState() ?? ["minZoom": 1.0, "maxZoom": 1.0, "zoom": 1.0])
+    }
 
 	func stop(result: @escaping FlutterResult) {
 		reader?.stop(pause: false)
