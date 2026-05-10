@@ -93,7 +93,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
                     final maxZoom = cameraState.maxZoom <= minZoom
                         ? minZoom + 0.01
                         : cameraState.maxZoom;
-                    final zoom = cameraState.zoom.clamp(minZoom, maxZoom);
+                    final zoom =
+                        cameraState.zoom.clamp(minZoom, maxZoom).toDouble();
 
                     return Column(
                       children: [
